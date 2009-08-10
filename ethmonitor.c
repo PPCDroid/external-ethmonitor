@@ -16,6 +16,9 @@
 #include <net/if.h>
 #include <ethtool-copy.h>
 
+#include <cutils/properties.h>
+#include <private/android_filesystem_config.h>
+
 int ifc_init();
 void ifc_close();
 int ifc_up(char *iname);
@@ -41,6 +44,10 @@ int get_link_status(int fd, struct ifreq *ifr)
 void monitor_connection(char *interface)
 {
 	struct ifreq ifr;
+
+	char buf[32];
+	char value[PROPERTY_VALUE_MAX];
+
 	int state = 0;
 	int fd;
 
@@ -65,6 +72,17 @@ void monitor_connection(char *interface)
 				printf("Connection up %s\n", interface);
 #endif
 				do_dhcp(interface);
+
+				/* DNS setting #1 */
+				snprintf(buf, sizeof(buf), "net.%s.dns1", interface);
+				property_get(buf, value, "");
+				property_set("net.dns1", value);
+
+				/* DNS setting #2 */
+				snprintf(buf, sizeof(buf), "net.%s.dns2", interface);
+				property_get(buf, value, "");
+				property_set("net.dns2", value);
+
 			} else { /* down connection */
 #ifdef DEBUG
 				printf("Connection down %s\n", interface);

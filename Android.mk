@@ -12,7 +12,7 @@ LOCAL_C_INCLUDES := \
 	external/ethtool
 
 LOCAL_MODULE := ethmonitor
-LOCAL_STATIC_LIBRARIES := libc
+LOCAL_STATIC_LIBRARIES := libcutils libc
 LOCAL_SHARED_LIBRARIES := libnetutils
 
 include $(BUILD_EXECUTABLE)
