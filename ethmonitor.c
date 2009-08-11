@@ -53,6 +53,7 @@ void monitor_connection(char *interface)
 	char value[PROPERTY_VALUE_MAX];
 
 	int state = 0;
+	int tmp_state = 0;
 	int fd;
 
 	while (1) {
@@ -66,7 +67,7 @@ void monitor_connection(char *interface)
 			exit(errno);
 		}
 
-		int tmp_state = get_link_status(fd, &ifr);
+		tmp_state = get_link_status(fd, &ifr);
 
 		if (tmp_state != state) { /* state changed */
 			state = tmp_state;
