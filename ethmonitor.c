@@ -77,6 +77,8 @@ void monitor_connection(char *interface)
 #endif
 				do_dhcp(interface);
 
+				sleep(1); /* beagleboard needs a second */
+
 				/* DNS setting #1 */
 				snprintf(buf, sizeof(buf), "net.%s.dns1", interface);
 				property_get(buf, value, "");
@@ -111,10 +113,6 @@ int main(int argc, char *argv[])
 	if (argc != 2) {
 		fprintf(stderr, "Invalid number of arguments\n");
 		return -EINVAL;
-	}
-
- 	if (fork() > 0) { /* daemonize */
-		return 0;
 	}
 
 	if (ifc_init()) {
