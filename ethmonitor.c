@@ -49,7 +49,7 @@ void monitor_connection(char *interface)
 {
 	struct ifreq ifr;
 
-	char buf[32];
+	char buf[PROPERTY_KEY_MAX];
 	char value[PROPERTY_VALUE_MAX];
 
 	int state = 0;
