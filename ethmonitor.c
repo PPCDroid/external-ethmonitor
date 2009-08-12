@@ -72,6 +72,9 @@ void monitor_connection(char *interface)
 		if (tmp_state != state) { /* state changed */
 			state = tmp_state;
 
+			snprintf(buf, sizeof(buf), "net.%s.status", interface);
+			property_set(buf, state ? "up" : "down");
+
 			if (state) { /* bring up connection */
 #ifdef DEBUG
 				printf("Connection up %s\n", interface);
@@ -84,6 +87,10 @@ void monitor_connection(char *interface)
 				snprintf(buf, sizeof(buf), "net.%s.dns1", interface);
 				property_get(buf, value, "");
 				property_set("net.dns1", value);
+
+				/* Report status of network connection */
+				snprintf(buf, sizeof(buf), "net.%s.status", interface);
+				property_set(buf, !!strcmp(value, "") ? "dhcp" : "up");
 
 				/* DNS setting #2 */
 				snprintf(buf, sizeof(buf), "net.%s.dns2", interface);
