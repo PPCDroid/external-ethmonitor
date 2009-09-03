@@ -72,6 +72,9 @@ void monitor_connection(char *interface)
 		if (tmp_state != state) { /* state changed */
 			state = tmp_state;
 
+			/* Used by JNI code to find current DHCP device */
+			property_set("net.device", interface);
+
 			snprintf(buf, sizeof(buf), "net.%s.status", interface);
 			property_set(buf, state ? "up" : "down");
 
