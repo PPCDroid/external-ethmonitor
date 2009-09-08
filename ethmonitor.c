@@ -121,7 +121,7 @@ void monitor_connection(char *interface)
 			property_set(buf, state ? "up" : "down");
 
 			if (thread_running && !tmp_state)
-				exit(1); /* pthread_kill doesn't work correctly */
+				exit(0); /* pthread_kill doesn't work correctly */
 
 			if (state) { /* bring up connection */
 #ifdef DEBUG
