@@ -11,6 +11,8 @@ LOCAL_C_INCLUDES := \
     external/ethmonitor \
 	external/ethtool
 
+LOCAL_LDLIBS += -lpthread
+
 LOCAL_MODULE := ethmonitor
 LOCAL_STATIC_LIBRARIES := libcutils libc
 LOCAL_SHARED_LIBRARIES := libnetutils

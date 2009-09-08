@@ -10,11 +10,14 @@
 
 //#define DEBUG 1
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <net/if.h>
@@ -28,6 +31,42 @@ void ifc_close();
 int ifc_up(char *iname);
 int ifc_down(char *iname);
 int do_dhcp(char *iname);
+
+static int thread_running = 0;
+
+void dhcp_function(void *ptr)
+{
+	char buf[PROPERTY_KEY_MAX];
+	char value[PROPERTY_VALUE_MAX];
+	char *interface = (char *) ptr;
+
+	thread_running = 1;
+
+#ifdef DEBUG
+	printf("Running DHCP request\n");
+#endif
+
+	do_dhcp(interface);
+
+	sleep(1); /* beagleboard needs a second */
+
+	/* DNS setting #1 */
+	snprintf(buf, sizeof(buf), "net.%s.dns1", interface);
+	property_get(buf, value, "");
+	property_set("net.dns1", value);
+
+	/* Report status of network connection */
+	snprintf(buf, sizeof(buf), "net.%s.status", interface);
+	property_set(buf, !!strcmp(value, "") ? "dhcp" : "up");
+
+	/* DNS setting #2 */
+	snprintf(buf, sizeof(buf), "net.%s.dns2", interface);
+	property_get(buf, value, "");
+	property_set("net.dns2", value);
+
+	thread_running = 0;
+}
+
 
 int get_link_status(int fd, struct ifreq *ifr)
 {
@@ -56,6 +95,9 @@ void monitor_connection(char *interface)
 	int tmp_state = 0;
 	int fd;
 
+	pthread_t thread;
+
+
 	while (1) {
 		/* setup the control structures */
 		memset(&ifr, 0, sizeof(ifr));
@@ -78,27 +120,15 @@ void monitor_connection(char *interface)
 			snprintf(buf, sizeof(buf), "net.%s.status", interface);
 			property_set(buf, state ? "up" : "down");
 
+			if (thread_running && !tmp_state)
+				exit(1); /* pthread_kill doesn't work correctly */
+
 			if (state) { /* bring up connection */
 #ifdef DEBUG
 				printf("Connection up %s\n", interface);
 #endif
-				do_dhcp(interface);
 
-				sleep(1); /* beagleboard needs a second */
-
-				/* DNS setting #1 */
-				snprintf(buf, sizeof(buf), "net.%s.dns1", interface);
-				property_get(buf, value, "");
-				property_set("net.dns1", value);
-
-				/* Report status of network connection */
-				snprintf(buf, sizeof(buf), "net.%s.status", interface);
-				property_set(buf, !!strcmp(value, "") ? "dhcp" : "up");
-
-				/* DNS setting #2 */
-				snprintf(buf, sizeof(buf), "net.%s.dns2", interface);
-				property_get(buf, value, "");
-				property_set("net.dns2", value);
+				pthread_create (&thread, NULL, (void *) &dhcp_function, (void *) interface);
 
 			} else { /* down connection */
 #ifdef DEBUG
@@ -108,7 +138,7 @@ void monitor_connection(char *interface)
 
 		}
 		else {
-			sleep(1);
+			sleep(0.5); /* 500 milliseconds */
 		}
 	close(fd);
 	}
