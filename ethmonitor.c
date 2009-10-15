@@ -138,7 +138,7 @@ void monitor_connection(char *interface)
 
 		}
 		else {
-			sleep(0.5); /* 500 milliseconds */
+			usleep(500000); /* 500 milliseconds */
 		}
 	close(fd);
 	}
